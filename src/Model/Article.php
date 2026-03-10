@@ -1,6 +1,7 @@
 <?php 
 namespace App\Model;
 
+use App\Helpers\Text;
 use DateTime;
 
 class Article {
@@ -93,8 +94,55 @@ class Article {
 
     public function setImage($image): self
     {
-        $this->image = $image;
+        // Cas 1
+        if(is_array($image) && !empty($image['tmp_name'])) {
+            if(!empty($this->image)) {
+                $this->oldImage = $this->image;
+            }
+
+            $this->pendingUpload = true;
+            $this->image = $image['tmp_name'];
+
+        }
+
+        // Cas 2 
+        if(is_string($image) && !empty($image)) {
+            $this->image = $image;
+        }
 
         return $this;
     }
+    public function getOldImage(): ?string
+    {
+        return $this->oldImage;
+    }
+
+    public function getFormattedContent(): ?string
+    {
+        return nl2br(htmlentities($this->content));
+    }
+
+    public function getExcerpt(): ?string
+    {
+        if($this->content === null) {
+            return null;
+        }
+        return nl2br(htmlentities(Text::excerpt($this->content, 60)));
+    }
+
+    public function getCategoriesIds(): array 
+    {
+        $ids = [];
+        foreach ($this->categories as $category) {
+            $ids[] = $category->getID();
+        }
+        return $ids;
+    }
+
+    public function addCategory(): void 
+    {
+        
+    }
+
+
 }
