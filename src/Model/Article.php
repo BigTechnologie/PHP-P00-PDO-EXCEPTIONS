@@ -139,10 +139,30 @@ class Article {
         return $ids;
     }
 
-    public function addCategory(): void 
+    public function addCategory(Category $category): void 
     {
-        
+        $this->categories[] = $category;
+        $category->setArticle($this);
     }
 
+    public function getImageURL(string $format): ?string 
+    {
+        if(empty($this->image)) {
+            return null;
+        }
+
+        // Cas 1: Image distante
+        if(str_starts_with($this->image, 'http')) {
+            return $this->image;
+        }
+
+        // Cas 2: Image locale
+        return '/uploads/posts/' . $this->image . '_' . $format . '.jpg';  // /uploads/posts/photo1_thumb.jpg
+    }
+
+    public function shouldUpload(): bool
+    {
+        return $this->pendingUpload;
+    }
 
 }
