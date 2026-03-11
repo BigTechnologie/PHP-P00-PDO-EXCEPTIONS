@@ -69,10 +69,43 @@ abstract class Controller {
         $ok = $query->execute([$id]);
 
         if($ok === false) {
-            throw new \Exception("Impossible d esupprimer l'enregistrement $id dans la table {$this->table}");
+            throw new \Exception("Impossible de supprimer l'enregistrement $id dans la table {$this->table}");
         }
     }
 
+    public function create(array $data): int // ["name" => "Paul", "email" => "paul@dawan.fr", "age" => "22"]
+    {
+        $sqlFields = [];
+        foreach ($data as $key => $value) {
+            $sqlFields[] = "$key = :$key"; // $name = :name;
+        }
+
+        $query = $this->pdo->prepare("INSERT INTO {$this->table} SET " . implode(', ', $sqlFields));
+        $ok = $query->execute($data);
+        if($ok === false) {
+            throw new \Exception("Impossible de créer l'enregistrement dans la table {$this->table}");
+        }
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    public function update(array $data, int $id)
+    {
+        $sqlFields = [];
+        foreach ($data as $key => $value) {
+            $sqlFields[] = "$key = :$key"; // $name = :name;
+        }
+
+        $query = $this->pdo->prepare("UPDATE {$this->table} SET " . implode(', ', $sqlFields) . " WHERE id = :id");
+        $ok = $query->execute(array_merge($data, ['id' => $id]));
+        if($ok === false) {
+            throw new \Exception("Impossible de modifier l'enregistrement dans la table {$this->table}");
+        }
+
+    }
+    public function queryAndFetchAll(string $sql): array 
+    {
+        return $this->pdo->query($sql, PDO::FETCH_CLASS, $this->class)->fetchAll();
+    }
     
 
 }
