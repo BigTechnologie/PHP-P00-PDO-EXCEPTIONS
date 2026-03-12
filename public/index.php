@@ -7,6 +7,8 @@ $whoops = new \Whoops\Run;
 $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
 $whoops->register();
 
+define('UPLOAD_PATH', __DIR__ .DIRECTORY_SEPARATOR . 'uploads'); // CRUD
+
 // /path?page=1&sort=asc // [2, 8]
 if(isset($_GET['page']) && $_GET['page'] === '1') {
     $uri = explode('?', $_SERVER['REQUEST_URI'])[0];
@@ -26,4 +28,8 @@ if(isset($_GET['page']) && $_GET['page'] === '1') {
 $router = new App\Router(dirname(__DIR__) . '/views');
 $router
     ->get('/', 'article/index', 'home')
+    ->get('/blog/category/[*:slug]-[i:id]', 'category/show', 'category')
+    ->get('/blog/[*:slug]-[i:id]', 'article/show', 'article')
+    ->match('/login', 'auth/login', 'login')
+    ->post('logout', 'auth/logout', 'logout')
     ->run(); // Permet de lancer notre routeur
