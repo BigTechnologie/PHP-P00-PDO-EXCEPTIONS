@@ -90,6 +90,9 @@ final class ArticleController extends Controller {
         $articles = $paginatedQuery->getItems(Article::class);
         
         (new CategoryController($this->pdo))->hydrateArticles($articles);
+
+        return [$articles, $paginatedQuery];
+
     }
 
     
