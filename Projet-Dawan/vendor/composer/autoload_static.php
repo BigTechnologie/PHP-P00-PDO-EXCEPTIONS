@@ -29,6 +29,11 @@ class ComposerStaticInit2ea01025be6ee5acd42764297ed11ec3
         array (
             'Psr\\Log\\' => 8,
         ),
+        'I' =>
+        array (
+            'Intervention\\Image\\' => 19,
+            'Intervention\\Gif\\' => 17,
+        ),
         'A' =>
         array (
             'App\\' => 4,
@@ -55,6 +60,14 @@ class ComposerStaticInit2ea01025be6ee5acd42764297ed11ec3
         'Psr\\Log\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
+        ),
+        'Intervention\\Image\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/intervention/image/src',
+        ),
+        'Intervention\\Gif\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/intervention/gif/src',
         ),
         'App\\' =>
         array (

@@ -1,45 +1,62 @@
-<?php 
+<?php
 
 namespace App\Model;
 
 use App\Helpers\Text;
 use DateTime;
 
-class Article {
+// Définition de la classe Article représentant un article de blog ou une publication
+class Article
+{
+    // Identifiant unique de l'article (peut être null tant que l'article n'est pas en base)
     private ?int $id = null;
+
+    // Slug de l'article (URL SEO-friendly, ex: "mon-article-exemple")
     private ?string $slug = null;
+
+    // Titre ou nom de l'article
     private ?string $name = null;
+
+    // Contenu principal de l'article (texte HTML ou brut)
     private ?string $content = null;
+
+    // Date de création de l'article (stockée sous forme de chaîne, convertie ensuite en DateTime)
     private ?string $created_at = null;
+
     /**
      * Liste des catégories associées à l'article
-     * @var Category[] tableau d'objet category
+     * @var Category[] tableau d'objets Category
      */
     private array $categories = [];
-    private ?string $image = null; // Exple : "photo.jpg"
-    // Permet d'indiquer si une nouvelle image est en attente d'upload(true = upload à traiter, si non false)
-    private bool $pendingUpload = false;
-    // Va contenir l'ancienne image
+
+    // Nom du fichier image associé à l'article (ex: "photo.jpg")
+    private ?string $image = null;
+
+    // Ancienne image conservée lors d'une mise à jour (utile pour suppression ou historique)
     private ?string $oldImage = null;
+
+    // Indique si une nouvelle image est en attente d'upload (true = upload à traiter)
+    private bool $pendingUpload = false;
 
     public function getID(): ?int
     {
         return $this->id;
     }
 
-    public function setID(?int $id): self
+    public function setID(int $id): self
     {
         $this->id = $id;
 
         return $this;
     }
 
+
     public function getSlug(): ?string
     {
         return $this->slug;
     }
 
-    public function setSlug(?string $slug): self
+    public function setSlug(string $slug): self
     {
         $this->slug = $slug;
 
@@ -50,7 +67,8 @@ class Article {
     {
         return $this->name;
     }
-    public function setName(?string $name): self
+
+    public function setName(string $name): self
     {
         $this->name = $name;
 
@@ -62,7 +80,7 @@ class Article {
         return $this->content;
     }
 
-    public function setContent(?string $content): self
+    public function setContent(string $content): self
     {
         $this->content = $content;
 
@@ -74,23 +92,33 @@ class Article {
         return new DateTime($this->created_at);
     }
 
-    public function setCreatedAt(?string $date): self
+    public function setCreatedAt(string $date): self
     {
         $this->created_at = $date;
 
         return $this;
     }
 
+    /**
+     * Retourne le tableau des catégories associées à l'article
+     * @return Category[] 
+     */
     public function getCategories(): array
     {
         return $this->categories;
     }
 
-    public function setCategories(array $categories): self
+    /**
+     * Définit les catégories associées à un article.
+     *
+     * @param Category[] $categories
+     * @return self
+     */
+    public function setCategories(array $categories): self 
     {
-        $this->categories = $categories;
+        $this->categories = $categories; 
 
-        return $this;
+        return $this; 
     }
 
     public function getImage(): ?string
@@ -98,76 +126,89 @@ class Article {
         return $this->image;
     }
 
-    public function setImage(?string $image): self
+    /**
+     * méthode pour définir une image.
+     * @param mixed $image 
+     * @return Article
+     */
+    public function setImage($image): self
     {
-        // Cas 1 : Si $image est un tableau
-        if(is_array($image) && !empty($image['tmp_name'])) {
-            if(!empty($this->image)) {
+        
+        if (is_array($image) && !empty($image['tmp_name'])) {
+            
+            if (!empty($this->image)) {
                 $this->oldImage = $this->image;
             }
-            $this->pendingUpload = true;
-            $this->image = $image['tmp_name'];
+           
+            $this->pendingUpload = true; 
+            $this->image = $image['tmp_name']; 
         }
-
-        // Cas 2 : Si $image est une chaine de caractère
-        if(is_string($image) && !empty($image)) {
+        
+        if (is_string($image) && !empty($image)) {
+            
             $this->image = $image;
         }
 
-        return $this;
+        return $this; 
     }
 
+    // Getter pour l’ancienne image (pas de setter prévu)
     public function getOldImage(): ?string
     {
         return $this->oldImage;
     }
 
-    // Permet de retourner le contenu mis en forme (HTM sécurisé)
+    // Retourne le contenu mis en forme (HTML sécurisé avec sauts de ligne)
     public function getFormattedContent(): ?string
     {
         return nl2br(htmlentities($this->content));
     }
 
-    // Permet de retourner un extrait du contenu (60 caractères au max)
-    public function getExcerpt(): ?string 
+    // Retourne un extrait du contenu (60 caractères max), sécurisé pour le HTML
+    public function getExcerpt(): ?string
     {
-        if($this->content  === null) {
+        if ($this->content === null) {
             return null;
         }
         return nl2br(htmlentities(Text::excerpt($this->content, 60)));
     }
 
-    // Permet de retourner un tableau des identifiants des catégories associées à mon objet Article
+    // Retourne un tableau des identifiants des catégories associées à l’objet article
     public function getCategoriesIds(): array 
     {
-        $ids = [];
-        foreach($this->categories as $category) {
-            $ids[] = $category->getID();
+        $ids = []; 
+        foreach ($this->categories as $category) { 
+            $ids[] = $category->getID(); 
         }
-        return $ids;
+        return $ids; 
     }
 
-    // Permet d'ajouter une catégorie à un article et d'établir la relation inverse
+    // Ajoute une catégorie à l'article et établit la relation inverse
     public function addCategory(Category $category): void 
     {
-        $this->categories[] = $category; // setArticle()
-        $category->setArticle($this);
+        
+        $this->categories[] = $category; 
+        // On appelle la méthode setArticle() de la catégorie en lui passant l’objet courant ($this).
+        $category->setArticle($this); 
     }
 
-    // Permet de récupérer l'URL d'une image
+    // Retourne l’URL de l’image avec un format donné (ex: "small", "large")
     public function getImageURL(string $format): ?string 
     {
-        if(empty($this->image)) {
+        if (empty($this->image)) { 
             return null;
         }
-        // On retourne : /uploads/posts/photo1_thumb.jpg
+        //Sinon, on construit une URL dynamique vers le fichier image, en fonction du nom de base de l’image ($this->image) et du format demandé.
         return '/uploads/posts/' . $this->image . '_' . $format . '.jpg';
+        // Exemple : si $this->image = 'photo1' et $format = 'thumb', ça retourne : /uploads/posts/photo1_thumb.jpg
     }
 
-    // Permet d'indiquer si une image est en attente d'upload
+    // Indique si une image est en attente d'upload // méthode qui indique s’il faut uploader quelque chose. bool : elle retourne un booléen (true ou false).
     public function shouldUpload(): bool
     {
-        return $this->pendingUpload;
+        return $this->pendingUpload; 
     }
 
+
 }
+

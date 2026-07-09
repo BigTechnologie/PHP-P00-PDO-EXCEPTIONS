@@ -1,93 +1,129 @@
 <?php 
-
 namespace App\Controller;
 
 use App\Model\Article;
 use App\PaginatedQuery;
+use App\Controller\Controller;
 
+/**
+ * Cette class permet de faire des requêtes au niveau de nos articles
+ * final car cette class n'a pas vocation à être héritée
+ * Elle hérite de `Controller` qui contient les méthodes génériques (create, update, etc.)
+*/
 final class ArticleController extends Controller {
+
+    // Nom de la table liée aux articles
     protected ?string $table = "article";
+    
+    // Classe du modèle associé
     protected ?string $class = Article::class;
 
-    // Méthode qui permet de mettre à jour un enregistrement existant en BDD
-    public function updateAticle(Article $article): void 
+    /**
+     * Met à jour un article existant en base de données
+     * @param Article $article L'article à mettre à jour
+     * @return void
+     */
+    public function updateArticle (Article $article): void 
     {
+        // Appelle la méthode update du parent avec les données de l'article
         $this->update([
             'name' => $article->getName(),
             'slug' => $article->getSlug(),
             'content' => $article->getContent(),
             'created_at' => $article->getCreatedAt()->format('Y-m-d H:i:s'),
-            'image' => $article->getImage(),
-        ], $article->getID());
+            'image' => $article->getImage()
+        ], $article->getID()); // L'ID est utilisé pour cibler l'article à modifier
     }
 
-    public function createArticle(Article $article): void
+    /**
+     * Crée un nouvel article en base de données.
+     * @param Article $article L'article à enregistrer
+     * @return void
+     */
+    public function createArticle (Article $article): void 
     {
-        // Appelle de la méthode create du parent et on récupère l'ID généné
+        // Appelle la méthode create du parent et récupère l'ID généré
         $id = $this->create([
             'name' => $article->getName(),
             'slug' => $article->getSlug(),
             'content' => $article->getContent(),
-            'created_at' => $article->getCreatedAt()->format('Y-m-d H:i:s'),
             'image' => $article->getImage(),
+            'created_at' => $article->getCreatedAt()->format('Y-m-d H:i:s')
         ]);
-        // Mise à jour de l'objet Article avec son ID
-        $article->setID($id);
+        $article->setID($id); // Met à jour l'objet Article avec son ID
     }
 
-    // Méthode qui permet d'associer des catégories à un article
-    public function attachCategories (int $id, array $categories)
+    /**
+     * Associe des catégories à un article.
+     * @param int $id L'ID de l'article
+     * @param array $categories Tableau d'ID de catégories à associer
+     * @return void
+     */
+    public function attachCategories (int $id, array $categories) 
     {
-        // On supprime toutes les anciennes associations catégorie/article
+        // Supprime toutes les anciennes associations catégorie/article
         $this->pdo->exec('DELETE FROM article_category WHERE article_id = ' . $id);
-        
-        // On prépare une requête d'insertion
+
+        // Prépare une requête d'insertion
         $query = $this->pdo->prepare('INSERT INTO article_category SET article_id = ?, category_id = ?');
 
-        // On exécute l'insertion pour chaque catégorie
+        // Exécute l'insertion pour chaque catégorie sélectionnée
         foreach($categories as $category) {
             $query->execute([$id, $category]);
         }
     }
 
-    // Méthode permettant de récuperer tous les articles paginés
-    public function findPaginated()
+    /**
+     * Récupère tous les articles paginés
+     * @return array<array|PaginatedQuery> [articles, objet de pagination]
+     */
+    public function findPaginated () 
     {
+        // Création d'une requête paginée avec tri par date décroissante
         $paginatedQuery = new PaginatedQuery(
             "SELECT * FROM {$this->table} ORDER BY created_at DESC",
             "SELECT COUNT(id) FROM {$this->table}",
             $this->pdo
         );
 
-        // Les articles de la page courante
+        // Récupère les articles de la page courante
         $articles = $paginatedQuery->getItems(Article::class);
 
-        // On hydrate les articles avec leurs catégories (liaison)
+        // Hydrate les articles avec leurs catégories (liaison avec CategoryController)
         (new CategoryController($this->pdo))->hydrateArticles($articles);
 
-        // On retourne les articles + info pagination
-        return [$articles, $paginatedQuery];
+        return [$articles, $paginatedQuery]; // Retourne les articles + info pagination
     }
 
-    // Méthode permettant de récuperer les articles paginés pour une catégorie spécifique
-    public function findPaginatedForCategory(int $categoryID)
+    /**
+     * Récupère les articles paginés pour une catégorie spécifique. 
+     * 
+     * @param int $categoryID L'ID de la catégorie
+     * @return array<array|PaginatedQuery> [articles, objet de pagination]
+     */
+    public function findPaginatedForCategory (int $categoryID) 
     {
-        // Requête SQL pour filtrer les articles appartenent à une catégorie spécifique
+        // Requête SQL pour filtrer les articles appartenant à une catégorie spécifique
         $paginatedQuery = new PaginatedQuery(
             "SELECT a.*
-            FROM {$this->table} a
-            JOIN article_category ac ON ac.article_id = a.id
-            WHERE ac.category_id = {$categoryID}
-            ORDER BY created_at DESC",
+                FROM {$this->table} a 
+                JOIN article_category ac ON ac.article_id = a.id
+                WHERE ac.category_id = {$categoryID}
+                ORDER BY created_at DESC",
             "SELECT COUNT(category_id) FROM article_category WHERE category_id = {$categoryID}"
         );
 
+        // Récupère les articles paginés
         $articles = $paginatedQuery->getItems(Article::class);
 
+        // Hydrate les articles avec leurs catégories
         (new CategoryController($this->pdo))->hydrateArticles($articles);
-
-        // On retourne le tableau d'articles et la pagination
-        return [$articles, $paginatedQuery];
+        // Retourne le tableau d’articles et la pagination
+        return [$articles, $paginatedQuery]; 
     }
+
+
+
+
 
 }
