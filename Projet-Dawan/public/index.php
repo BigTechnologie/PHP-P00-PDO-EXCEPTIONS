@@ -32,6 +32,9 @@ $router
     ->get('/blog/[*:slug]-[i:id]', 'article/show', 'article')
     ->match('/login', 'auth/login', 'login')
     ->post('/logout', 'auth/logout', 'logout')
+    // Inscription
+    ->get('/register', 'registration/register', 'register_form')
+    ->post('/register', 'registration/process_register', 'register_process')
     
     // ADMIN
     // Gestion des articles
